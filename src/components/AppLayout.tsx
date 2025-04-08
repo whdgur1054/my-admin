@@ -24,8 +24,8 @@ const AppLayout: React.FC<{ menuItems: MenuItem[] }> = ({ menuItems }) => {
 
   const selectedKey = useMemo(() => {
     return (
-      realMenu.find((item) => location.pathname.startsWith(item.prgrUrl))
-        ?.key || ""
+      realMenu.find((item) => location.pathname.startsWith(item.path))?.key ||
+      ""
     )
   }, [location.pathname, realMenu])
 
