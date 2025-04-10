@@ -137,6 +137,7 @@ export interface Menu extends Base {
   selected?: boolean // 메뉴선택여부
   rootMenu?: string // 최상위메뉴
   children?: Menu[]
+  systId?: string // 시스템ID
 }
 
 export interface AntdMenu {

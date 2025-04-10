@@ -24,20 +24,27 @@ const AppLayout: React.FC<{ menuItems: MenuItem[] }> = ({ menuItems }) => {
 
   const selectedKey = useMemo(() => {
     return (
-      realMenu.find((item) => location.pathname.startsWith(item.path))?.key ||
-      ""
+      realMenu.find((item) =>
+        location.pathname.startsWith("main/" + item.prgrId),
+      )?.menuId || ""
     )
   }, [location.pathname, realMenu])
 
   const breadcrumbItems = useMemo(() => {
     const currentMenu = realMenu.find((item) =>
-      location.pathname.startsWith(item.path),
+      location.pathname.startsWith("main/" + item.prgrId),
     )
 
     return [
       { title: <Link to="/main">Home</Link> },
       currentMenu
-        ? { title: <Link to={currentMenu.path}>{currentMenu.label}</Link> }
+        ? {
+            title: (
+              <Link to={"main/" + currentMenu.prgrId}>
+                {currentMenu.menuNm}
+              </Link>
+            ),
+          }
         : null,
     ].filter(Boolean) // null 제거
   }, [location.pathname, realMenu])
@@ -68,10 +75,10 @@ const AppLayout: React.FC<{ menuItems: MenuItem[] }> = ({ menuItems }) => {
               const IconComponent = Icons[item.icon]
               return (
                 <Menu.Item
-                  key={item.key}
+                  key={item.menuId}
                   icon={IconComponent ? <IconComponent /> : null}
                 >
-                  <Link to={item.path}>{item.label}</Link>
+                  <Link to={item.prgrId}>{item.menuNm}</Link>
                 </Menu.Item>
               )
             })}

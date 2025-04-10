@@ -11,9 +11,9 @@ const pageModules = import.meta.glob("../pages/**/*.tsx")
 
 // 💡 파일명을 key로 쓰는 map 구성
 const routeComponentMap: Record<string, React.LazyExoticComponent<any>> = {}
-Object.entries(pageModules).forEach(([path, loader]) => {
+Object.entries(pageModules).forEach(([prgrUrl, loader]) => {
   // const fileName = path.split("/").pop()?.replace(".tsx", "");
-  const fileName = path.split("/").pop()?.replace(".tsx", "")
+  const fileName = prgrUrl.split("/").pop()?.replace(".tsx", "")
   if (fileName && loader) {
     routeComponentMap[fileName] = lazy(loader as any)
   }
@@ -35,15 +35,15 @@ function MainRoutes() {
       <Route path="/" element={<AppLayout menuItems={realMenu} />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         {realMenu.map((item) => {
-          const LazyComponent = routeComponentMap[item.key]
+          const LazyComponent = routeComponentMap[item.prgrId]
           if (!LazyComponent) {
-            console.warn(`🚨 No component found for key: ${item.key}`)
+            console.warn(`🚨 No component found for key: ${item.prgrId}`)
             return null
           }
           return (
             <Route
-              key={item.key}
-              path={item.path.replace("/main/", "")}
+              key={item.prgrId}
+              path={item.prgrId}
               element={
                 <Suspense fallback={<Loading />}>
                   <LazyComponent />
