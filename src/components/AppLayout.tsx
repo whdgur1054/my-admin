@@ -17,31 +17,40 @@ const AppLayout: React.FC<{ menuItems: AntdMenu[] }> = ({ menuItems }) => {
     }
   }, [location.pathname, navigate])
 
+  const findmenuPath = (items, path, parents) => {
+    for (const item of items) {
+      const currentPath = [...parents, item]
+      if (
+        path === "/main/" + item?.bwgmenu?.prgrId ||
+        path.startsWith("/main/" + item.bwgmenu.prgrId)
+      ) {
+        return currentPath
+      }
+
+      if (item.children) {
+        const found = findmenuPath(item.children, path, currentPath)
+        if (found) return found
+      }
+    }
+    return null
+  }
   const selectedKey = useMemo(() => {
-    return (
-      menuItems.find((item) =>
-        location.pathname.startsWith("main/" + item?.bwgmenu?.prgrId),
-      )?.menuId || ""
-    )
+    const menuPath = findmenuPath(menuItems, location.pathname, [])
+    return menuPath?.[menuPath.length - 1]?.bwgmenu?.menuId || ""
   }, [location.pathname, menuItems])
 
   const breadcrumbItems = useMemo(() => {
-    const currentMenu = menuItems.find((item) =>
-      location.pathname.startsWith("main/" + item?.bwgmenu?.prgrId),
-    )
-
+    const menuPath = findmenuPath(menuItems, location.pathname, [])
     return [
       { title: <Link to="/main">Home</Link> },
-      currentMenu
-        ? {
-            title: (
-              <Link to={"main/" + currentMenu.prgrId}>
-                {currentMenu.menuNm}
-              </Link>
-            ),
-          }
-        : null,
-    ].filter(Boolean) // null 제거
+      ...(menuPath || []).map((item) => ({
+        title: item.bwgmenu?.prgrId ? (
+          <Link to={`/main/${item.bwgmenu.prgrId}`}>{item.bwgmenu.menuNm}</Link>
+        ) : (
+          item.bwgmenu.menuNm
+        ),
+      })),
+    ]
   }, [location.pathname, menuItems])
 
   const buildMenuItems = (nodes: MenuItem[]): ItemType[] => {
