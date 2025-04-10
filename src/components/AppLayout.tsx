@@ -11,11 +11,6 @@ const { Header, Sider, Content } = Layout
 const AppLayout: React.FC<{ menuItems: MenuItem[] }> = ({ menuItems }) => {
   const location = useLocation()
   const navigate = useNavigate()
-  const [realMenu, setRealMenu] = React.useState(menuItems)
-  React.useEffect(() => {
-    setRealMenu(menuItems)
-  }, [menuItems])
-
   useEffect(() => {
     if (!isAuthenticated()) {
       navigate("/login", { replace: true })
@@ -24,14 +19,14 @@ const AppLayout: React.FC<{ menuItems: MenuItem[] }> = ({ menuItems }) => {
 
   const selectedKey = useMemo(() => {
     return (
-      realMenu.find((item) =>
+      menuItems.find((item) =>
         location.pathname.startsWith("main/" + item.prgrId),
       )?.menuId || ""
     )
-  }, [location.pathname, realMenu])
+  }, [location.pathname, menuItems])
 
   const breadcrumbItems = useMemo(() => {
-    const currentMenu = realMenu.find((item) =>
+    const currentMenu = menuItems.find((item) =>
       location.pathname.startsWith("main/" + item.prgrId),
     )
 
@@ -47,7 +42,7 @@ const AppLayout: React.FC<{ menuItems: MenuItem[] }> = ({ menuItems }) => {
           }
         : null,
     ].filter(Boolean) // null 제거
-  }, [location.pathname, realMenu])
+  }, [location.pathname, menuItems])
 
   return (
     <Layout style={{ minHeight: "100vh", width: "100vw" }}>
@@ -71,7 +66,7 @@ const AppLayout: React.FC<{ menuItems: MenuItem[] }> = ({ menuItems }) => {
             selectedKeys={[selectedKey]}
             style={{ height: "100%", borderRight: 0 }}
           >
-            {realMenu.map((item) => {
+            {menuItems.map((item) => {
               const IconComponent = Icons[item.icon]
               return (
                 <Menu.Item

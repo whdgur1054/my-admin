@@ -21,20 +21,14 @@ Object.entries(pageModules).forEach(([prgrUrl, loader]) => {
 
 function MainRoutes() {
   const menuItems = useMenu()
-  const [realMenu, setRealMenu] = React.useState(menuItems)
-
-  React.useEffect(() => {
-    setRealMenu(menuItems)
-  }, [menuItems])
-
-  if (!realMenu.length) return <div>Loading...</div>
+  if (!menuItems.length) return <div>Loading...</div>
 
   console.log(pageModules)
   return (
     <Routes>
-      <Route path="/" element={<AppLayout menuItems={realMenu} />}>
+      <Route path="/" element={<AppLayout menuItems={menuItems} />}>
         <Route index element={<Navigate to="dashboard" replace />} />
-        {realMenu.map((item) => {
+        {menuItems.map((item) => {
           const LazyComponent = routeComponentMap[item.prgrId]
           if (!LazyComponent) {
             console.warn(`🚨 No component found for key: ${item.prgrId}`)

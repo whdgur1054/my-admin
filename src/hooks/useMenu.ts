@@ -22,7 +22,7 @@ export interface MenuItem {
 }
 
 export const useMenu = () => {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
+  const [menuItems, setMenuItems] = useState<AntdMenu[]>([])
 
   useEffect(() => {
     const fetchMenu = async () => {
@@ -59,15 +59,6 @@ export const useMenu = () => {
         //   },
         // ],
         data: [
-          {
-            menuId: "Dashboard",
-            prgrId: "Dashboard",
-            menuNm: "대시보드",
-            prgrUrl: "/pages/Dashboard",
-            menuPrntId: "",
-            menuLvl: 0,
-            menuGbCd: "",
-          },
           {
             crprCd: "100",
             menuId: "CM00",
@@ -133,9 +124,23 @@ export const useMenu = () => {
             menuLvl: 3,
             rootMenu: "관리자설정",
           },
+          {
+            crprCd: "100",
+            menuId: "CM010104",
+            menuPrntId: "CM0101",
+            menuNm: "대시보드",
+            menuGbCd: "CM502P",
+            menuNo: "0004",
+            systId: undefined,
+            prgrId: "Dashboard",
+            prgrUrl: "/pages/Dashboard",
+            menuLvl: 3,
+            rootMenu: "관리자설정",
+          },
         ],
       }
       // const menuList: AntdMenu[] = menuUtil().getAntdMenuList(res.data, "-")
+      // console.log("menuList", menuList)
       setMenuItems(res.data)
       // setMenuItems(menuList)
     }
