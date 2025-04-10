@@ -8,7 +8,7 @@ import { MenuItem } from "../hooks/useMenu"
 
 const { Header, Sider, Content } = Layout
 
-const AppLayout: React.FC<{ menuItems: MenuItem[] }> = ({ menuItems }) => {
+const AppLayout: React.FC<{ menuItems: AntdMenu[] }> = ({ menuItems }) => {
   const location = useLocation()
   const navigate = useNavigate()
   useEffect(() => {
@@ -20,14 +20,14 @@ const AppLayout: React.FC<{ menuItems: MenuItem[] }> = ({ menuItems }) => {
   const selectedKey = useMemo(() => {
     return (
       menuItems.find((item) =>
-        location.pathname.startsWith("main/" + item.prgrId),
+        location.pathname.startsWith("main/" + item?.bwgmenu?.prgrId),
       )?.menuId || ""
     )
   }, [location.pathname, menuItems])
 
   const breadcrumbItems = useMemo(() => {
     const currentMenu = menuItems.find((item) =>
-      location.pathname.startsWith("main/" + item.prgrId),
+      location.pathname.startsWith("main/" + item?.bwgmenu?.prgrId),
     )
 
     return [
@@ -43,6 +43,22 @@ const AppLayout: React.FC<{ menuItems: MenuItem[] }> = ({ menuItems }) => {
         : null,
     ].filter(Boolean) // null 제거
   }, [location.pathname, menuItems])
+
+  const buildMenuItems = (nodes: MenuItem[]): ItemType[] => {
+    return nodes.map((item) => {
+      const IconComponent = Icons[item.bwgmenu.icon || ""]
+      return {
+        key: item.bwgmenu.menuId,
+        icon: IconComponent ? <IconComponent /> : undefined,
+        label: item.bwgmenu.prgrId ? (
+          <Link to={item.bwgmenu.prgrId}>{item.bwgmenu.menuNm}</Link>
+        ) : (
+          item.bwgmenu.menuNm
+        ),
+        children: item.children ? buildMenuItems(item.children) : undefined,
+      }
+    })
+  }
 
   return (
     <Layout style={{ minHeight: "100vh", width: "100vw" }}>
@@ -65,18 +81,21 @@ const AppLayout: React.FC<{ menuItems: MenuItem[] }> = ({ menuItems }) => {
             mode="inline"
             selectedKeys={[selectedKey]}
             style={{ height: "100%", borderRight: 0 }}
+            items={buildMenuItems(menuItems)}
           >
-            {menuItems.map((item) => {
-              const IconComponent = Icons[item.icon]
+            {/* {menuItems.map((item) => {
+              const IconComponent = Icons[item?.bwgmenu?.icon]
               return (
                 <Menu.Item
-                  key={item.menuId}
+                  key={item?.bwgmenu?.menuId}
                   icon={IconComponent ? <IconComponent /> : null}
                 >
-                  <Link to={item.prgrId}>{item.menuNm}</Link>
+                  <Link to={item?.bwgmenu?.prgrId}>
+                    {item?.bwgmenu?.menuNm}
+                  </Link>
                 </Menu.Item>
               )
-            })}
+            })} */}
           </Menu>
         </Sider>
 

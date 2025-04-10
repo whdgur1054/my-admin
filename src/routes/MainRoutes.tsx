@@ -3,6 +3,7 @@ import React, { lazy, Suspense } from "react"
 import { Route, Routes, Navigate } from "react-router-dom"
 import AppLayout from "../components/AppLayout"
 import { useMenu } from "../hooks/useMenu"
+import { AntdMenu } from "../store/types"
 
 const Loading = () => <div>Loading page...</div>
 
@@ -24,28 +25,41 @@ function MainRoutes() {
   if (!menuItems.length) return <div>Loading...</div>
 
   console.log(pageModules)
+
+  const renderRoutes = (menuItems: AntdMenu[]) => {
+    return menuItems.map((item) => {
+      const LazyComponent = routeComponentMap[item?.bwgmenu?.prgrId]
+
+      // children이 있는 경우 재귀적으로 처리
+      if (item.children && item.children.length > 0) {
+        return renderRoutes(item.children)
+      }
+
+      // prgrId가 없거나 라우트 모듈이 없으면 무시
+      if (!item?.bwgmenu?.prgrId || !LazyComponent) {
+        console.warn(`🚨 No component found for key: ${item?.bwgmenu?.prgrId}`)
+        return null
+      }
+
+      return (
+        <Route
+          key={item?.bwgmenu?.prgrId}
+          path={item?.bwgmenu?.prgrId}
+          element={
+            <Suspense fallback={<Loading />}>
+              <LazyComponent />
+            </Suspense>
+          }
+        />
+      )
+    })
+  }
+
   return (
     <Routes>
       <Route path="/" element={<AppLayout menuItems={menuItems} />}>
         <Route index element={<Navigate to="dashboard" replace />} />
-        {menuItems.map((item) => {
-          const LazyComponent = routeComponentMap[item.prgrId]
-          if (!LazyComponent) {
-            console.warn(`🚨 No component found for key: ${item.prgrId}`)
-            return null
-          }
-          return (
-            <Route
-              key={item.prgrId}
-              path={item.prgrId}
-              element={
-                <Suspense fallback={<Loading />}>
-                  <LazyComponent />
-                </Suspense>
-              }
-            />
-          )
-        })}
+        {renderRoutes(menuItems)}
       </Route>
     </Routes>
   )

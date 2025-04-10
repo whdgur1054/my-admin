@@ -127,22 +127,22 @@ export const useMenu = () => {
           {
             crprCd: "100",
             menuId: "CM010104",
-            menuPrntId: "CM0101",
+            menuPrntId: "-",
             menuNm: "대시보드",
             menuGbCd: "CM502P",
             menuNo: "0004",
             systId: undefined,
             prgrId: "Dashboard",
             prgrUrl: "/pages/Dashboard",
-            menuLvl: 3,
+            menuLvl: 1,
             rootMenu: "관리자설정",
           },
         ],
       }
-      // const menuList: AntdMenu[] = menuUtil().getAntdMenuList(res.data, "-")
-      // console.log("menuList", menuList)
-      setMenuItems(res.data)
-      // setMenuItems(menuList)
+      const menuList: AntdMenu[] = menuUtil().getAntdMenuList(res.data, "-")
+      console.log("menuList", menuList)
+      // setMenuItems(res.data)
+      setMenuItems(menuList)
     }
     fetchMenu()
   }, [])
