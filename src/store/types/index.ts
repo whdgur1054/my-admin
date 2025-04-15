@@ -138,6 +138,7 @@ export interface Menu extends Base {
   rootMenu?: string // 최상위메뉴
   children?: Menu[]
   systId?: string // 시스템ID
+  icon?: string // 아이콘
 }
 
 export interface AntdMenu {

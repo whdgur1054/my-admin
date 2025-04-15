@@ -21,10 +21,9 @@ Object.entries(pageModules).forEach(([prgrUrl, loader]) => {
 })
 
 function MainRoutes() {
-  const menuItems = useMenu()
+  const menu = useMenu()
+  const menuItems = menu?.menuItems || []
   if (!menuItems.length) return <div>Loading...</div>
-
-  console.log(pageModules)
 
   const renderRoutes = (menuItems: AntdMenu[]) => {
     return menuItems.map((item) => {
@@ -57,7 +56,12 @@ function MainRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<AppLayout menuItems={menuItems} />}>
+      <Route
+        path="/"
+        element={
+          <AppLayout menuItems={menuItems} rawMenuItems={menu.rawMenuItems} />
+        }
+      >
         <Route index element={<Navigate to="dashboard" replace />} />
         {renderRoutes(menuItems)}
       </Route>
