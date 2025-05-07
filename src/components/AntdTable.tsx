@@ -1,31 +1,58 @@
 // AntdTable.tsx
-import React, { useState, useContext, useEffect, useRef } from "react"
+import React, {
+  useState,
+  useContext,
+  useEffect,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+} from "react"
 import { Table, Input, Form } from "antd"
 import type { InputRef } from "antd"
 import type { FormInstance } from "antd/es/form"
-import type { ColumnsType } from "antd/es/table"
+import type { ColumnsType, ColumnType } from "antd/es/table"
+import "./AntdTable.css"
 
-interface Item {
-  key: string
-  name: string
-  age: string
-  address: string
+export type RowStatus =
+  | "normal"
+  | "insert"
+  | "update"
+  | "delete"
+  | "insertDelete"
+  | "updateDelete"
+
+export interface Item {
+  [key: string]: any
+  rowStatus?: RowStatus
 }
 
-const originData: Item[] = [
-  {
-    key: "0",
-    name: "홍길동",
-    age: "32",
-    address: "서울특별시 강남구",
-  },
-  {
-    key: "1",
-    name: "김철수",
-    age: "28",
-    address: "부산광역시 해운대구",
-  },
-]
+export interface antdColType extends ColumnType<Item> {
+  editable?: boolean
+  required?: boolean
+}
+export interface EditableCellProps {
+  title: React.ReactNode
+  editable: boolean
+  children: React.ReactNode
+  dataIndex: keyof Item
+  record: Item
+  required?: boolean
+  handleSave: (record: Item) => void
+}
+
+interface AntdTableProps {
+  data?: Item[]
+  columns?: ColumnsType<Item>
+  options?: {
+    check?: boolean
+  }
+}
+
+export interface AntdTableRef {
+  getCurrentRow: () => Item | null
+  getDataSource: () => Item[]
+  setDataSource: (data: Item[]) => void
+}
 
 const EditableContext = React.createContext<FormInstance<any> | null>(null)
 
@@ -43,21 +70,13 @@ const EditableRow: React.FC<React.HTMLAttributes<HTMLTableRowElement>> = ({
   )
 }
 
-interface EditableCellProps {
-  title: React.ReactNode
-  editable: boolean
-  children: React.ReactNode
-  dataIndex: keyof Item
-  record: Item
-  handleSave: (record: Item) => void
-}
-
 const EditableCell: React.FC<EditableCellProps> = ({
   title,
   editable,
   children,
   dataIndex,
   record,
+  required,
   handleSave,
   ...restProps
 }) => {
@@ -93,7 +112,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
       <Form.Item
         style={{ margin: 0, height: "100%" }} // ← 높이 고정
         name={dataIndex}
-        rules={[{ required: true, message: `${title}을(를) 입력하세요.` }]}
+        rules={[{ required: required, message: `${title}을(를) 입력하세요.` }]}
       >
         <Input
           ref={inputRef}
@@ -124,76 +143,148 @@ const EditableCell: React.FC<EditableCellProps> = ({
   return <td {...restProps}>{childNode}</td>
 }
 
-interface AntdTableProps {
-  data?: Item[]
-  onChange?: (newData: Item[]) => void
-}
+const AntdTable = forwardRef<AntdTableRef, AntdTableProps>(
+  (props: AntdTableProps, ref) => {
+    const [dataSource, setDataSource] = useState<Item[]>(props.data || [])
+    const [selectedRow, setSelectedRow] = useState<Item | null>(null)
+    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
+    const [selectedRows, setSelectedRows] = useState<Item[]>([])
 
-const AntdTable: React.FC<AntdTableProps> = ({
-  data = originData,
-  onChange,
-}) => {
-  const [dataSource, setDataSource] = useState<Item[]>(data)
+    useEffect(() => {
+      setDataSource(
+        props.data?.map((Item, index) => {
+          return { key: index, ...Item }
+        }) || [],
+      )
+    }, [props.data])
 
-  useEffect(() => {
-    setDataSource(data)
-  }, [data])
+    const handleSave = (row: Item) => {
+      const newData = [...dataSource]
+      const index = newData.findIndex((item) => row.key === item.key)
+      const oldRow = newData[index]
+      console.log(oldRow, row)
 
-  const handleSave = (row: Item) => {
-    const newData = [...dataSource]
-    const index = newData.findIndex((item) => row.key === item.key)
-    newData[index] = row
-    setDataSource(newData)
-    onChange?.(newData) // 외부로 변경 전달
-  }
+      const hasChanged = Object.keys(row).some((key) => {
+        if (key === "rowStatus" || key === "key") return false
+        return row[key] !== oldRow[key]
+      })
 
-  const columns: ColumnsType<Item> = [
-    {
-      title: "이름",
-      dataIndex: "name",
-      editable: true,
-      width: "30%",
-    },
-    {
-      title: "나이",
-      dataIndex: "age",
-      editable: true,
-      width: "20%",
-    },
-    {
-      title: "주소",
-      dataIndex: "address",
-      width: "50%",
-    },
-  ]
+      if (row.key === oldRow.key) {
+        if (hasChanged) {
+          const updatedRow = {
+            ...oldRow,
+            ...row,
+            rowStatus:
+              oldRow.rowStatus === "insert"
+                ? ("insert" as RowStatus)
+                : oldRow.rowStatus === "delete"
+                ? ("updateDelete" as RowStatus)
+                : ("update" as RowStatus),
+          }
+          newData.splice(index, 1, updatedRow)
+          setDataSource(newData)
+        }
+      }
+    }
 
-  const mergedColumns = columns.map((col) => ({
-    ...col,
-    onCell: (record: Item) => ({
-      record,
-      editable: col.editable,
-      dataIndex: col.dataIndex!,
-      title: col.title,
-      handleSave,
-    }),
-  }))
+    useImperativeHandle(ref, () => ({
+      getDataSource: () => dataSource,
+      getCurrentRow: () => selectedRow,
+      setDataSource: (newData) => setDataSource(newData),
+      getValue: (key: string, dataIndex: string) => {
+        const row = dataSource.find((item) => item.key === key)
+        return row ? row[dataIndex] : null
+      },
+      addRow: (newRow: Item) => {
+        newRow.rowStatus = "insert"
+        newRow.key = dataSource.length + 1
+        setDataSource((prev) => [...prev, newRow])
+      },
+      deleteRows: () => {
+        const newData = [...dataSource]
+        selectedRowKeys?.forEach((key) => {
+          console.log(key)
+          const index = newData.findIndex((item) => key === item.key)
+          console.log(index)
+          if (index > -1) {
+            const row = newData[index]
+            console.log(row)
+            if (row.rowStatus === "insert") {
+              newData[index] = { ...row, rowStatus: "insertDelete" }
+            } else if (row.rowStatus === "insertDelete") {
+              newData[index] = { ...row, rowStatus: "insert" }
+            } else if (row.rowStatus === "updateDelete") {
+              newData[index] = { ...row, rowStatus: "update" }
+            } else if (row.rowStatus === "delete") {
+              newData[index] = { ...row, rowStatus: "normal" }
+            } else if (row.rowStatus === "update") {
+              newData[index] = { ...row, rowStatus: "updateDelete" }
+            } else {
+              newData[index] = { ...row, rowStatus: "delete" }
+            }
+          }
+        })
+        setDataSource(newData)
+        setSelectedRowKeys([])
+        setSelectedRows([])
+      },
+    }))
 
-  return (
-    <Table
-      components={{
-        body: {
-          row: EditableRow,
-          cell: EditableCell,
+    const mergedColumns = (props.columns || []).map((col) => ({
+      ...col,
+      onCell: (record: Item) => ({
+        record,
+        editable: col.editable,
+        dataIndex: col.dataIndex!,
+        title: col.title,
+        ...col,
+        handleSave,
+        onClick: () => {
+          setSelectedRow(record)
         },
-      }}
-      rowClassName={() => "editable-row"}
-      bordered
-      dataSource={dataSource}
-      columns={mergedColumns}
-      pagination={false}
-      tableLayout="fixed" // ← 요거 추가!!
-    />
-  )
-}
+      }),
+    }))
+
+    return (
+      <Table
+        components={{
+          body: {
+            row: EditableRow,
+            cell: EditableCell,
+          },
+        }}
+        // rowClassName={() => "editable-row"}
+
+        rowClassName={(record) => {
+          switch (record.rowStatus) {
+            case "insert":
+              return "row-new"
+            case "update":
+              return "row-modified"
+            case "delete":
+            case "insertDelete":
+            case "updateDelete":
+              return "row-deleted"
+            default:
+              return ""
+          }
+        }}
+        bordered
+        dataSource={dataSource}
+        columns={mergedColumns}
+        rowSelection={{
+          type: "checkbox",
+          selectedRowKeys: selectedRowKeys,
+          onChange(selectedRowKeys, selectedRows) {
+            setSelectedRowKeys(selectedRowKeys)
+            setSelectedRows(selectedRows)
+          },
+        }}
+        pagination={false}
+        tableLayout="fixed" // ← 요거 추가!!
+      />
+    )
+  },
+)
 
 export default AntdTable

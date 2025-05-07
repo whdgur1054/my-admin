@@ -33,11 +33,9 @@ export const useMenu = () => {
           return res.json()
         })
         .then((data) => {
-          setRawMenuItems(Object.values({ ...data.data }))
-          const menuList: AntdMenu[] = menuUtil().getAntdMenuList(
-            data.data,
-            "-",
-          )
+          console.log("menu data", data)
+          setRawMenuItems(Object.values(data))
+          const menuList: AntdMenu[] = menuUtil().getAntdMenuList(data, "-")
           setMenuItems(menuList)
         })
     }

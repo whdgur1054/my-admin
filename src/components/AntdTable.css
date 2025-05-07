@@ -1,0 +1,11 @@
+.row-new {
+    background-color: #e6fffb;
+  }
+  .row-modified {
+    background-color: #e6f7ff;
+  }
+  .row-deleted {
+    background-color: #f5f5f5;
+    text-decoration: line-through;
+    color: gray;
+  }

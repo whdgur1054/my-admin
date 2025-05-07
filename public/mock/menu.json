@@ -1,4 +1,6 @@
-{"data" : [{
+[
+  {
+    "key": 0,
     "crprCd": "100",
     "menuId": "CM00",
     "menuPrntId": "-",
@@ -12,6 +14,7 @@
     "rootMenu": ""
   },
   {
+    "key": 1,
     "crprCd": "100",
     "menuId": "CM01",
     "menuPrntId": "-",
@@ -25,10 +28,11 @@
     "rootMenu": ""
   },
   {
+    "key": 2,
     "crprCd": "100",
     "menuId": "CM0001",
     "menuPrntId": "CM00",
-    "menuNm": "대시보드",
+    "menuNm": "대시보드14",
     "menuGbCd": "CM502P",
     "menuNo": "0004",
     "systId": "",
@@ -38,6 +42,7 @@
     "rootMenu": "즐겨찾기"
   },
   {
+    "key": 3,
     "crprCd": "100",
     "menuId": "CM0101",
     "menuPrntId": "CM01",
@@ -51,6 +56,7 @@
     "rootMenu": ""
   },
   {
+    "key": 4,
     "crprCd": "100",
     "menuId": "CM010102",
     "menuPrntId": "CM0101",
@@ -64,6 +70,7 @@
     "rootMenu": "관리자설정"
   },
   {
+    "key": 5,
     "crprCd": "100",
     "menuId": "CM010103",
     "menuPrntId": "CM0101",
@@ -77,6 +84,7 @@
     "rootMenu": "관리자설정"
   },
   {
+    "key": 6,
     "crprCd": "100",
     "menuId": "CM010104",
     "menuPrntId": "CM0101",
@@ -88,5 +96,5 @@
     "prgrUrl": "pages/views/cm/admn/CMUMenuMngmM01",
     "menuLvl": 3,
     "rootMenu": "관리자설정"
-  }]
-}
+  }
+]
