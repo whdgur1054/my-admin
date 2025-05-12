@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react"
-import AntdTable, { antdColType } from "../../../../components/AntdTable"
-import { Button, Flex } from "antd"
+import AntdTable, { EditableCellProps } from "../../../../components/AntdTable"
+import { Button, Col, Flex, Form, Input, Row } from "antd"
 import { $jsonUtil } from "../../../../utils/jsonUtil"
 
 const CMUserMstrM01 = () => {
   const tableRef = useRef<any>(null)
+  const searchFormRef = useRef<any>(null)
   const [tableData, setTableData] = useState<any[]>([])
 
   useEffect(() => {
@@ -13,7 +14,7 @@ const CMUserMstrM01 = () => {
     })
   }, [])
 
-  const columns: antdColType[] = [
+  const columns: EditableCellProps[] = [
     {
       title: "상태",
       dataIndex: "rowStatus",
@@ -51,6 +52,21 @@ const CMUserMstrM01 = () => {
   ]
 
   const buttonEvent = {
+    buttonSrch() {
+      const searchForm = searchFormRef.current
+      const formData = searchForm.getFieldsValue()
+      const userId = formData.userId
+      const userNm = formData.userNm
+      $jsonUtil.fetchJson("user").then((data) => {
+        if (userId) {
+          data = data.filter((item: any) => item.userId?.includes(userId))
+        }
+        if (userNm) {
+          data = data.filter((item: any) => item.userNm?.includes(userNm))
+        }
+        setTableData(data)
+      })
+    },
     buttonAdd() {
       tableRef.current.addRow({})
     },
@@ -83,8 +99,23 @@ const CMUserMstrM01 = () => {
         align="center"
         style={{ marginBottom: "20px" }}
       >
-        <>테스트 소제목</>
+        <Form ref={searchFormRef}>
+          <Row>
+            <Col span={11}>
+              <Form.Item label="사용자ID" name="userId">
+                <Input></Input>
+              </Form.Item>
+            </Col>
+            <Col span={1}></Col>
+            <Col span={11}>
+              <Form.Item label="사용자명" name="userNm">
+                <Input></Input>
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
         <Flex>
+          <Button onClick={buttonEvent.buttonSrch}> 조회</Button>
           <Button onClick={buttonEvent.buttonAdd}> 추가</Button>
           <Button onClick={buttonEvent.buttonDel}> 삭제</Button>
           <Button onClick={buttonEvent.buttonSave}> 저장</Button>

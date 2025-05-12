@@ -6,11 +6,13 @@ import React, {
   useRef,
   forwardRef,
   useImperativeHandle,
+  JSX,
 } from "react"
 import { Table, Input, Form } from "antd"
 import type { InputRef } from "antd"
 import type { FormInstance } from "antd/es/form"
 import "./AntdTable.css"
+import { ColumnType } from "antd/es/table"
 
 export type RowStatus =
   | "normal"
@@ -25,20 +27,23 @@ export interface Item {
   [key: string]: any
   rowStatus?: RowStatus
 }
-
-export interface EditableCellProps<Item> {
-  title: React.ReactNode
-  editable: boolean
-  children: React.ReactNode
-  dataIndex: keyof Item
-  record: Item
+export interface antdColType extends ColumnType<Item> {
+  editable?: boolean
   required?: boolean
-  handleSave: (record: Item) => void
+}
+export interface EditableCellProps extends antdColType {
+  title: React.ReactNode | JSX.Element
+  editable?: boolean
+  children?: React.ReactNode
+  dataIndex: keyof Item
+  record?: Item
+  required?: boolean
+  handleSave?: (record: Item) => void
 }
 
 interface AntdTableProps {
   data?: Item[]
-  columns?: EditableCellProps<Item>
+  columns?: EditableCellProps[]
   options?: {
     check?: boolean
   }
@@ -67,7 +72,7 @@ const EditableRow: React.FC<React.HTMLAttributes<HTMLTableRowElement>> = ({
   )
 }
 
-const EditableCell: React.FC<EditableCellProps<Item>> = ({
+const EditableCell: React.FC<EditableCellProps> = ({
   title,
   editable,
   children,
@@ -188,14 +193,14 @@ const AntdTable = forwardRef<AntdTableRef, AntdTableProps>(
       getDataSource: () => dataSource,
       getCurrentRow: () => selectedRow,
       validationCheck: () => {
-        const requiredCols = mergedColumns.filter(
-          (col: EditableCellProps<Item>) => col.required,
+        const requiredCols = (props.columns || []).filter(
+          (col: EditableCellProps) => col.required,
         )
 
         let result = true
         const message: string[] = []
         dataSource.forEach((row) => {
-          requiredCols.forEach((col: EditableCellProps<Item>) => {
+          requiredCols.forEach((col: EditableCellProps) => {
             if (!row[col.dataIndex]) {
               result = false
 
@@ -262,15 +267,11 @@ const AntdTable = forwardRef<AntdTableRef, AntdTableProps>(
         </>
       ),
       onCell: (record: Item) => ({
-        record,
+        dataIndex: col.dataIndex,
         editable: col.editable,
-        dataIndex: col.dataIndex!,
-        title: col.title,
-        ...col,
+        required: col.required,
         handleSave,
-        onClick: () => {
-          setSelectedRow(record)
-        },
+        record,
       }),
     }))
 
@@ -300,7 +301,7 @@ const AntdTable = forwardRef<AntdTableRef, AntdTableProps>(
         }}
         bordered
         dataSource={dataSource}
-        columns={mergedColumns}
+        columns={mergedColumns as ColumnType<Item>[]}
         rowSelection={{
           type: "checkbox",
           selectedRowKeys: selectedRowKeys,
