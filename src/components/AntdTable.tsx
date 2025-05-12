@@ -10,11 +10,11 @@ import React, {
 import { Table, Input, Form } from "antd"
 import type { InputRef } from "antd"
 import type { FormInstance } from "antd/es/form"
-import type { ColumnsType, ColumnType } from "antd/es/table"
 import "./AntdTable.css"
 
 export type RowStatus =
   | "normal"
+  | ""
   | "insert"
   | "update"
   | "delete"
@@ -26,11 +26,7 @@ export interface Item {
   rowStatus?: RowStatus
 }
 
-export interface antdColType extends ColumnType<Item> {
-  editable?: boolean
-  required?: boolean
-}
-export interface EditableCellProps {
+export interface EditableCellProps<Item> {
   title: React.ReactNode
   editable: boolean
   children: React.ReactNode
@@ -42,7 +38,7 @@ export interface EditableCellProps {
 
 interface AntdTableProps {
   data?: Item[]
-  columns?: ColumnsType<Item>
+  columns?: EditableCellProps<Item>
   options?: {
     check?: boolean
   }
@@ -52,6 +48,7 @@ export interface AntdTableRef {
   getCurrentRow: () => Item | null
   getDataSource: () => Item[]
   setDataSource: (data: Item[]) => void
+  validationCheck: () => { result: boolean; message: string[] }
 }
 
 const EditableContext = React.createContext<FormInstance<any> | null>(null)
@@ -70,7 +67,7 @@ const EditableRow: React.FC<React.HTMLAttributes<HTMLTableRowElement>> = ({
   )
 }
 
-const EditableCell: React.FC<EditableCellProps> = ({
+const EditableCell: React.FC<EditableCellProps<Item>> = ({
   title,
   editable,
   children,
@@ -190,6 +187,30 @@ const AntdTable = forwardRef<AntdTableRef, AntdTableProps>(
     useImperativeHandle(ref, () => ({
       getDataSource: () => dataSource,
       getCurrentRow: () => selectedRow,
+      validationCheck: () => {
+        const requiredCols = mergedColumns.filter(
+          (col: EditableCellProps<Item>) => col.required,
+        )
+
+        let result = true
+        const message: string[] = []
+        dataSource.forEach((row) => {
+          requiredCols.forEach((col: EditableCellProps<Item>) => {
+            if (!row[col.dataIndex]) {
+              result = false
+
+              message.push(
+                `${dataSource.indexOf(row)} : ${col.title} is required`,
+              )
+            }
+          })
+        })
+        return {
+          result: result,
+          message: message,
+        }
+      },
+
       setDataSource: (newData) => setDataSource(newData),
       getValue: (key: string, dataIndex: string) => {
         const row = dataSource.find((item) => item.key === key)
@@ -216,7 +237,7 @@ const AntdTable = forwardRef<AntdTableRef, AntdTableProps>(
             } else if (row.rowStatus === "updateDelete") {
               newData[index] = { ...row, rowStatus: "update" }
             } else if (row.rowStatus === "delete") {
-              newData[index] = { ...row, rowStatus: "normal" }
+              newData[index] = { ...row, rowStatus: "" }
             } else if (row.rowStatus === "update") {
               newData[index] = { ...row, rowStatus: "updateDelete" }
             } else {
@@ -232,6 +253,14 @@ const AntdTable = forwardRef<AntdTableRef, AntdTableProps>(
 
     const mergedColumns = (props.columns || []).map((col) => ({
       ...col,
+      title: (
+        <>
+          {col.title}
+          {col.required && (
+            <span style={{ color: "red", marginLeft: 4 }}>*</span>
+          )}
+        </>
+      ),
       onCell: (record: Item) => ({
         record,
         editable: col.editable,

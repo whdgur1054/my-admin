@@ -29,11 +29,14 @@ app.post("/api/save-json", (req, res) => {
     fs.mkdirSync(dirPath, { recursive: true })
   }
 
-  const rowData = JSON.stringify(
-    data.map(({ rowStatus, ...data }) => data),
-    null,
-    2,
-  )
+  let rowData = JSON.stringify(data, null, 2)
+  if (Array.isArray(data)) {
+    rowData = JSON.stringify(
+      data.map(({ rowStatus, ...data }) => data),
+      null,
+      2,
+    )
+  }
 
   fs.writeFile(filePath, rowData, (err) => {
     if (err) {

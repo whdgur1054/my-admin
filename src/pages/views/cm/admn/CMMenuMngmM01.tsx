@@ -57,11 +57,6 @@ const CMMenuMngmM01 = () => {
       editable: true,
     },
     {
-      title: "프로그램URL",
-      dataIndex: "prgrUrl",
-      editable: true,
-    },
-    {
       title: "메뉴레벨",
       dataIndex: "menuLvl",
       editable: true,
@@ -81,9 +76,6 @@ const CMMenuMngmM01 = () => {
 
   const handleAdd = () => {
     tableRef.current.addRow({})
-  }
-  const handleDel = () => {
-    tableRef.current.deleteRow(2)
   }
   const handleDels = () => {
     tableRef.current.deleteRows()
@@ -112,9 +104,6 @@ const CMMenuMngmM01 = () => {
     <>
       <Button onClick={handleAdd} type="primary" style={{ marginBottom: 16 }}>
         행추가
-      </Button>
-      <Button onClick={handleDel} type="primary" style={{ marginBottom: 16 }}>
-        행삭제
       </Button>
       <Button onClick={handleDels} type="primary" style={{ marginBottom: 16 }}>
         선택 행삭제

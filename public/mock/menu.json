@@ -18,7 +18,7 @@
     "crprCd": "100",
     "menuId": "CM01",
     "menuPrntId": "-",
-    "menuNm": "관리자설정",
+    "menuNm": "관리자설정16",
     "menuGbCd": "CM502M",
     "menuNo": "",
     "systId": "",
@@ -37,7 +37,6 @@
     "menuNo": "0004",
     "systId": "",
     "prgrId": "Dashboard",
-    "prgrUrl": "/pages/Dashboard",
     "menuLvl": 2,
     "rootMenu": "즐겨찾기"
   },
@@ -65,7 +64,6 @@
     "menuNo": "0002",
     "systId": "",
     "prgrId": "CMCrprMstrM01",
-    "prgrUrl": "pages/views/cm/admn/CMCrprMstrM01",
     "menuLvl": 3,
     "rootMenu": "관리자설정"
   },
@@ -79,7 +77,6 @@
     "menuNo": "0003",
     "systId": "",
     "prgrId": "CMUserMstrM01",
-    "prgrUrl": "pages/views/cm/admn/CMUserMstrM01",
     "menuLvl": 3,
     "rootMenu": "관리자설정"
   },
@@ -93,7 +90,6 @@
     "menuNo": "0003",
     "systId": "",
     "prgrId": "CMMenuMngmM01",
-    "prgrUrl": "pages/views/cm/admn/CMUMenuMngmM01",
     "menuLvl": 3,
     "rootMenu": "관리자설정"
   }

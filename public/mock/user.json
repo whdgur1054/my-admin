@@ -1,0 +1,36 @@
+[
+  {
+    "key": "10",
+    "crprCd": "1000",
+    "userId": "user112314",
+    "userNm": "이몽룡",
+    "userGbCd": "A",
+    "userNo": "001"
+  },
+  {
+    "key": "11",
+    "crprCd": "1000",
+    "userId": "user2",
+    "userNm": "성춘향",
+    "userGbCd": "B",
+    "userNo": "002"
+  },
+  {
+    "key": "12",
+    "crprCd": "1000",
+    "userId": "user3",
+    "userNm": "몽룡이",
+    "userGbCd": "C",
+    "userNo": "003"
+  },
+  {
+    "key": 4,
+    "crprCd": "1",
+    "userId": "2"
+  },
+  {
+    "key": 5,
+    "crprCd": "1",
+    "userId": "3"
+  }
+]

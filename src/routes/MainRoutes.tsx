@@ -4,6 +4,7 @@ import { Route, Routes, Navigate } from "react-router-dom"
 import AppLayout from "../components/AppLayout"
 import { useMenu } from "../hooks/useMenu"
 import { AntdMenu } from "../store/types"
+import { Header } from "antd/es/layout/layout"
 
 const Loading = () => <div>Loading page...</div>
 
@@ -46,6 +47,17 @@ function MainRoutes() {
           path={item?.bwgmenu?.prgrId}
           element={
             <Suspense fallback={<Loading />}>
+              <Header
+                style={{
+                  background: "#fff",
+                  padding: 0,
+                  marginBottom: "20px",
+                  fontSize: "20px",
+                  fontWeight: "bold",
+                }}
+              >
+                {item?.bwgmenu?.menuNm}
+              </Header>
               <LazyComponent />
             </Suspense>
           }
