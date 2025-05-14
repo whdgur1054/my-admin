@@ -12,7 +12,7 @@
     "crprCd": "1000",
     "userId": "user2",
     "userNm": "성춘향",
-    "userGbCd": "B",
+    "userGbCd": "B1414",
     "userNo": "002"
   },
   {
@@ -24,13 +24,31 @@
     "userNo": "003"
   },
   {
-    "key": 4,
-    "crprCd": "1",
-    "userId": "2"
+    "crprCd": "1000",
+    "userId": "0004",
+    "userNm": "48558",
+    "userGbCd": "42584258",
+    "userNo": ""
   },
   {
-    "key": 5,
-    "crprCd": "1",
-    "userId": "3"
+    "crprCd": "100",
+    "userId": "1111111",
+    "userNm": "22223",
+    "userGbCd": "3",
+    "userNo": "1233"
+  },
+  {
+    "crprCd": "111",
+    "userId": "111",
+    "userNm": "123123",
+    "userGbCd": "3",
+    "userNo": "1111"
+  },
+  {
+    "crprCd": "123",
+    "userId": "123",
+    "userNm": "13232123",
+    "userGbCd": "",
+    "userNo": ""
   }
 ]

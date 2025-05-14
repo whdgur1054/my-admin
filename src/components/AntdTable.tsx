@@ -9,7 +9,7 @@ import React, {
   JSX,
 } from "react"
 import { Table, Input, Form } from "antd"
-import type { InputRef } from "antd"
+import type { InputRef, TableProps } from "antd"
 import type { FormInstance } from "antd/es/form"
 import "./AntdTable.css"
 import { ColumnType } from "antd/es/table"
@@ -27,33 +27,37 @@ export interface Item {
   [key: string]: any
   rowStatus?: RowStatus
 }
-export interface antdColType extends ColumnType<Item> {
+export interface antdColType extends ColumnType {
   editable?: boolean
   required?: boolean
 }
-export interface EditableCellProps extends antdColType {
+export interface EditableCellProps<T> extends antdColType {
   title: React.ReactNode | JSX.Element
   editable?: boolean
   children?: React.ReactNode
-  dataIndex: keyof Item
-  record?: Item
+  dataIndex: keyof T
+  record?: T
   required?: boolean
-  handleSave?: (record: Item) => void
+  handleSave?: (record: T) => void
 }
 
-interface AntdTableProps {
+interface AntdTableProps extends TableProps {
   data?: Item[]
-  columns?: EditableCellProps[]
+  columns?: EditableCellProps<Item>[]
   options?: {
     check?: boolean
   }
 }
 
 export interface AntdTableRef {
-  getCurrentRow: () => Item | null
   getDataSource: () => Item[]
-  setDataSource: (data: Item[]) => void
+  getCurrentRow: () => Item | null
   validationCheck: () => { result: boolean; message: string[] }
+  getColumns: () => EditableCellProps<Item>[]
+  setDataSource: (data: Item[]) => void
+  getValue: (key: string, dataIndex: string) => any
+  addRow: (newRow: Item) => void
+  deleteRows: () => void
 }
 
 const EditableContext = React.createContext<FormInstance<any> | null>(null)
@@ -72,7 +76,7 @@ const EditableRow: React.FC<React.HTMLAttributes<HTMLTableRowElement>> = ({
   )
 }
 
-const EditableCell: React.FC<EditableCellProps> = ({
+const EditableCell: React.FC<EditableCellProps<Item>> = ({
   title,
   editable,
   children,
@@ -101,7 +105,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
     try {
       const values = await form.validateFields()
       toggleEdit()
-      handleSave({ ...record, ...values })
+      handleSave?.({ ...record, ...values })
     } catch (errInfo) {
       console.log("Save failed:", errInfo)
     }
@@ -109,7 +113,10 @@ const EditableCell: React.FC<EditableCellProps> = ({
 
   let childNode = children
 
-  if (editable) {
+  if (
+    (required != true && editable) ||
+    (required == true && record?.rowStatus === "insert" && editable)
+  ) {
     childNode = editing ? (
       <Form.Item
         style={{ margin: 0, height: "100%" }} // ← 높이 고정
@@ -150,7 +157,6 @@ const AntdTable = forwardRef<AntdTableRef, AntdTableProps>(
     const [dataSource, setDataSource] = useState<Item[]>(props.data || [])
     const [selectedRow, setSelectedRow] = useState<Item | null>(null)
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
-    const [selectedRows, setSelectedRows] = useState<Item[]>([])
 
     useEffect(() => {
       setDataSource(
@@ -164,7 +170,6 @@ const AntdTable = forwardRef<AntdTableRef, AntdTableProps>(
       const newData = [...dataSource]
       const index = newData.findIndex((item) => row.key === item.key)
       const oldRow = newData[index]
-      console.log(oldRow, row)
 
       const hasChanged = Object.keys(row).some((key) => {
         if (key === "rowStatus" || key === "key") return false
@@ -194,13 +199,13 @@ const AntdTable = forwardRef<AntdTableRef, AntdTableProps>(
       getCurrentRow: () => selectedRow,
       validationCheck: () => {
         const requiredCols = (props.columns || []).filter(
-          (col: EditableCellProps) => col.required,
+          (col: EditableCellProps<Item>) => col.required,
         )
 
         let result = true
         const message: string[] = []
         dataSource.forEach((row) => {
-          requiredCols.forEach((col: EditableCellProps) => {
+          requiredCols.forEach((col: EditableCellProps<Item>) => {
             if (!row[col.dataIndex]) {
               result = false
 
@@ -215,6 +220,9 @@ const AntdTable = forwardRef<AntdTableRef, AntdTableProps>(
           message: message,
         }
       },
+      getColumns: () => {
+        return props.columns || []
+      },
 
       setDataSource: (newData) => setDataSource(newData),
       getValue: (key: string, dataIndex: string) => {
@@ -223,18 +231,19 @@ const AntdTable = forwardRef<AntdTableRef, AntdTableProps>(
       },
       addRow: (newRow: Item) => {
         newRow.rowStatus = "insert"
-        newRow.key = dataSource.length + 1
+        newRow.key = Math.max(...dataSource.map((item) => item.key)) + 1
+        if (newRow.key === -Infinity) {
+          newRow.key = 1
+        }
+        console.log("newRow", newRow)
         setDataSource((prev) => [...prev, newRow])
       },
       deleteRows: () => {
         const newData = [...dataSource]
         selectedRowKeys?.forEach((key) => {
-          console.log(key)
           const index = newData.findIndex((item) => key === item.key)
-          console.log(index)
           if (index > -1) {
             const row = newData[index]
-            console.log(row)
             if (row.rowStatus === "insert") {
               newData[index] = { ...row, rowStatus: "insertDelete" }
             } else if (row.rowStatus === "insertDelete") {
@@ -252,7 +261,6 @@ const AntdTable = forwardRef<AntdTableRef, AntdTableProps>(
         })
         setDataSource(newData)
         setSelectedRowKeys([])
-        setSelectedRows([])
       },
     }))
 
@@ -272,11 +280,15 @@ const AntdTable = forwardRef<AntdTableRef, AntdTableProps>(
         required: col.required,
         handleSave,
         record,
+        onClick: () => {
+          setSelectedRow(record)
+        },
       }),
     }))
 
     return (
       <Table
+        {...(props as TableProps<Item>)}
         components={{
           body: {
             row: EditableRow,
@@ -305,9 +317,12 @@ const AntdTable = forwardRef<AntdTableRef, AntdTableProps>(
         rowSelection={{
           type: "checkbox",
           selectedRowKeys: selectedRowKeys,
-          onChange(selectedRowKeys, selectedRows) {
+          onChange(selectedRowKeys, selectedRows, info) {
             setSelectedRowKeys(selectedRowKeys)
-            setSelectedRows(selectedRows)
+
+            if (props.rowSelection?.onChange) {
+              props.rowSelection.onChange(selectedRowKeys, selectedRows, info)
+            }
           },
         }}
         pagination={false}

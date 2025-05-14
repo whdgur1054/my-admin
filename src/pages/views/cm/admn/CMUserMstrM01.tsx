@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from "react"
-import AntdTable, { EditableCellProps } from "../../../../components/AntdTable"
+import AntdTable, {
+  AntdTableRef,
+  EditableCellProps,
+  RowStatus,
+} from "../../../../components/AntdTable"
 import { Button, Col, Flex, Form, Input, Row } from "antd"
 import { $jsonUtil } from "../../../../utils/jsonUtil"
+import alasql from "alasql"
 
 const CMUserMstrM01 = () => {
-  const tableRef = useRef<any>(null)
+  const tableRef = useRef<AntdTableRef>(null)
   const searchFormRef = useRef<any>(null)
   const [tableData, setTableData] = useState<any[]>([])
 
@@ -14,7 +19,16 @@ const CMUserMstrM01 = () => {
     })
   }, [])
 
-  const columns: EditableCellProps[] = [
+  interface UserMstr {
+    crprCd: number
+    userId: string
+    userNm: string
+    userGbCd: string
+    userNo: number
+    rowStatus: RowStatus | undefined
+  }
+
+  const columns: EditableCellProps<UserMstr>[] = [
     {
       title: "상태",
       dataIndex: "rowStatus",
@@ -55,41 +69,36 @@ const CMUserMstrM01 = () => {
     buttonSrch() {
       const searchForm = searchFormRef.current
       const formData = searchForm.getFieldsValue()
-      const userId = formData.userId
-      const userNm = formData.userNm
+      const userId = formData.userId ?? ""
+      const userNm = formData.userNm ?? ""
       $jsonUtil.fetchJson("user").then((data) => {
+        let query = `SELECT * FROM ? WHERE 1=1`
+        const parmas = [data]
         if (userId) {
-          data = data.filter((item: any) => item.userId?.includes(userId))
+          query += ` AND userId LIKE ?`
+          parmas.push(`%${userId}%`)
         }
         if (userNm) {
-          data = data.filter((item: any) => item.userNm?.includes(userNm))
+          query += ` AND userNm LIKE ?`
+          parmas.push(`%${userNm}%`)
         }
-        setTableData(data)
+        const tableData = alasql(query, parmas) as any[]
+        setTableData(tableData)
       })
     },
     buttonAdd() {
-      tableRef.current.addRow({})
+      console.log(tableRef.current?.getCurrentRow())
+      tableRef.current?.addRow({})
     },
     buttonSave() {
-      const saveToServer = async (data: any) => {
-        const res = await fetch("/api/save-json", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ fileName: "user", data: data }),
+      if (tableRef.current) {
+        $jsonUtil.updateJson("user", tableRef.current).then(() => {
+          buttonEvent.buttonSrch()
         })
       }
-      const valid = tableRef.current.validationCheck()
-      if (!valid.result) {
-        alert("필수값을 입력하세요.")
-        return
-      }
-      const data = tableRef.current.getDataSource()
-      saveToServer(data)
     },
     buttonDel() {
-      tableRef.current.deleteRows()
+      tableRef.current?.deleteRows()
     },
   }
   return (
