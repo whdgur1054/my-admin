@@ -1,7 +1,7 @@
 // hooks/useMenu.ts
 import { useEffect, useState } from "react"
 import menuUtil from "../utils/menuUtil"
-import { AntdMenu, Menu } from "../store/types"
+import { AntdMenu } from "../store/types"
 
 export interface MenuItem {
   // key: string
@@ -33,9 +33,12 @@ export const useMenu = () => {
           return res.json()
         })
         .then((data) => {
-          console.log("menu data", data)
-          setRawMenuItems(Object.values(data))
-          const menuList: AntdMenu[] = menuUtil().getAntdMenuList(data, "-")
+          console.log("menu data", data.data)
+          setRawMenuItems(Object.values(data.data))
+          const menuList: AntdMenu[] = menuUtil().getAntdMenuList(
+            data.data,
+            "-",
+          )
           setMenuItems(menuList)
         })
     }

@@ -1,0 +1,9 @@
+{
+  "table": {
+    "crprCd": "string",
+    "menuId": "string",
+    "_seq": "number",
+    "userId": "string"
+  },
+  "data": []
+}

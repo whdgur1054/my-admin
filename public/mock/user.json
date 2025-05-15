@@ -1,54 +1,64 @@
-[
-  {
-    "key": "10",
-    "crprCd": "1000",
-    "userId": "user112314",
-    "userNm": "이몽룡",
-    "userGbCd": "A",
-    "userNo": "001"
+{
+  "table": {
+    "key": "number",
+    "crprCd": "string",
+    "userId": "string",
+    "userNm": "string",
+    "userGbCd": "string",
+    "userNo": "string"
   },
-  {
-    "key": "11",
-    "crprCd": "1000",
-    "userId": "user2",
-    "userNm": "성춘향",
-    "userGbCd": "B1414",
-    "userNo": "002"
-  },
-  {
-    "key": "12",
-    "crprCd": "1000",
-    "userId": "user3",
-    "userNm": "몽룡이",
-    "userGbCd": "C",
-    "userNo": "003"
-  },
-  {
-    "crprCd": "1000",
-    "userId": "0004",
-    "userNm": "48558",
-    "userGbCd": "42584258",
-    "userNo": ""
-  },
-  {
-    "crprCd": "100",
-    "userId": "1111111",
-    "userNm": "22223",
-    "userGbCd": "3",
-    "userNo": "1233"
-  },
-  {
-    "crprCd": "111",
-    "userId": "111",
-    "userNm": "123123",
-    "userGbCd": "3",
-    "userNo": "1111"
-  },
-  {
-    "crprCd": "123",
-    "userId": "123",
-    "userNm": "13232123",
-    "userGbCd": "",
-    "userNo": "1"
-  }
-]
+  "data": [
+    {
+      "key": "10",
+      "crprCd": "1000",
+      "userId": "user112314",
+      "userNm": "이몽룡",
+      "userGbCd": "A",
+      "userNo": "001"
+    },
+    {
+      "key": "11",
+      "crprCd": "1000",
+      "userId": "user2",
+      "userNm": "성춘향111",
+      "userGbCd": "B1414",
+      "userNo": "002"
+    },
+    {
+      "key": "12",
+      "crprCd": "1000",
+      "userId": "user3",
+      "userNm": "몽룡이123",
+      "userGbCd": "C",
+      "userNo": "003"
+    },
+    {
+      "crprCd": "1000",
+      "userId": "0004",
+      "userNm": "48558",
+      "userGbCd": "42584258",
+      "userNo": ""
+    },
+    {
+      "crprCd": "100",
+      "userId": "1111111",
+      "userNm": "22223",
+      "userGbCd": "3",
+      "userNo": "1233"
+    },
+    {
+      "crprCd": "111",
+      "userId": "111",
+      "userNm": "123123",
+      "userGbCd": "3",
+      "userNo": "1111"
+    },
+    {
+      "crprCd": "123",
+      "userId": "123",
+      "userNm": "13232123",
+      "userGbCd": "",
+      "userNo": "1"
+    }
+  ]
+}

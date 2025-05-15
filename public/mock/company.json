@@ -1,4 +1,16 @@
-{
+{"table":{
+  "code":"string",
+  "name":"string",
+  "company":"string",
+  "address":"string",
+  "phone":"string",
+  "email":"string",
+  "description":"string",
+  "created_at":"number",
+  "updated_at":"number",
+  "_id":"number"
+},
+  "data":[{
   "code": "",
   "name": "테스트512",
   "company": "테스트",
@@ -9,4 +21,4 @@
   "created_at": 1698355200000,
   "updated_at": 1698355200000,
   "_id": 1
-}
+}]}

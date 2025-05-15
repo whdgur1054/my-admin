@@ -8,28 +8,33 @@ const fetchJson = async (jsonName: string) => {
       return res.json()
     })
     .then((data) => {
-      console.log("json data", data)
-      return data
+      console.log("json data", data.data)
+      return { data: data.data, table: data.table }
     })
 }
 const updateJson = async (jsonName: string, gridRef: AntdTableRef) => {
   // table의 데이터
   const data = gridRef.getDataSource()
+
+  const jsonArray = await fetchJson(jsonName)
+  const jsonData = jsonArray.data
+
   //실제 table의 column
   const ori_columnList = gridRef.getColumns()
   //rowStatus는 업데이트 시에만 사용하므로 제외
-  const columnList = ori_columnList.filter(
-    (item) => item.dataIndex !== "rowStatus",
-  )
+  const columnList = ori_columnList
+    .filter((item) => item.dataIndex !== "rowStatus")
+    .filter((item) =>
+      Object.keys(jsonArray.table).includes(item.dataIndex as string),
+    )
+  console.log("columnList", columnList)
 
-  const jsonArray = await fetchJson(jsonName)
-
-  //alasql을 사용하기 위해 jsonArray를 테이블로 변환
+  //alasql을 사용하기 위해 jsonData를 테이블로 변환
   alasql(`DROP TABLE IF EXISTS ${jsonName}`)
   alasql(`CREATE TABLE ${jsonName}`, [
     columnList.map((item) => item.dataIndex).join(","),
   ])
-  alasql(`INSERT INTO ${jsonName} SELECT * from ?`, [jsonArray])
+  alasql(`INSERT INTO ${jsonName} SELECT * from ?`, [jsonData])
 
   let resultCnt = 0
   data.map((rawData: Item) => {
@@ -84,7 +89,14 @@ const updateJson = async (jsonName: string, gridRef: AntdTableRef) => {
 
       const columns = columnList.map((item) => item.dataIndex).join(", ")
       const values = columnList
-        .map((item) => `'${record[item?.dataIndex] ?? ""}'`)
+        .map((item) => {
+          if (item.dataIndex === "_seq") {
+            const _seqsql = `(SELECT MAX(COALESCE(_seq,0)+1) FROM ${jsonName} WHERE ${whereClauses})`
+            return alasql(_seqsql, [...whereValues]) as number
+          }
+
+          return `'${record[item?.dataIndex] ?? ""}'`
+        })
         .join(", ")
 
       const query = `INSERT INTO ${jsonName} (${columns}) VALUES (${values})`
@@ -119,7 +131,7 @@ const updateJson = async (jsonName: string, gridRef: AntdTableRef) => {
       body: JSON.stringify({ fileName: jsonName, data: data }),
     })
   }
-  await saveToServer(result)
+  await saveToServer({ table: jsonArray.table, data: result })
   return resultCnt
 }
 export const $jsonUtil = {

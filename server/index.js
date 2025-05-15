@@ -1,3 +1,9 @@
+/**
+ * TODO
+ * 1. 나중에 파일접근이 동시에 이뤄질경우 데이터 손실방생으로 인한
+ *  파일 접근시 LOCK처리 할지 생각. - npm install proper-lockfile
+ */
+
 // server/index.js
 import express from "express"
 import fs from "fs"

@@ -1,4 +1,17 @@
-[
+{"table":{
+  "key": "number",
+  "crprCd": "number",
+  "menuId": "string",
+  "menuPrntId": "string",
+  "menuNm": "string",
+  "menuGbCd": "string",
+  "menuNo": "number",
+  "systId": "string",
+  "prgrId": "string",
+  "prgrUrl": "string",
+  "menuLvl": "number",
+    "rootMenu": "string"
+},"data" : [
   {
     "key": 0,
     "crprCd": "100",
@@ -37,6 +50,19 @@
     "menuNo": "0004",
     "systId": "",
     "prgrId": "Dashboard",
+    "menuLvl": 2,
+    "rootMenu": "즐겨찾기"
+  },
+  {
+    "key": 6,
+    "crprCd": "100",
+    "menuId": "CM0002",
+    "menuPrntId": "CM00",
+    "menuNm": "테스트페이지",
+    "menuGbCd": "CM502P",
+    "menuNo": "0004",
+    "systId": "",
+    "prgrId": "CMMenuModal",
     "menuLvl": 2,
     "rootMenu": "즐겨찾기"
   },
@@ -92,5 +118,18 @@
     "prgrId": "CMMenuMngmM01",
     "menuLvl": 3,
     "rootMenu": "관리자설정"
+  },
+  {
+    "key": 7,
+    "crprCd": "100",
+    "menuId": "CM010105",
+    "menuPrntId": "CM0101",
+    "menuNm": "화면담당자설정",
+    "menuGbCd": "CM502P",
+    "menuNo": "0003",
+    "systId": "",
+    "prgrId": "CMMenuUserM01",
+    "menuLvl": 3,
+    "rootMenu": "관리자설정"
   }
-]
+]}

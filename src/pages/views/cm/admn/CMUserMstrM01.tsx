@@ -14,9 +14,7 @@ const CMUserMstrM01 = () => {
   const [tableData, setTableData] = useState<any[]>([])
 
   useEffect(() => {
-    $jsonUtil.fetchJson("user").then((data) => {
-      setTableData(data)
-    })
+    buttonEvent.buttonSrch()
   }, [])
 
   interface UserMstr {
@@ -71,7 +69,7 @@ const CMUserMstrM01 = () => {
       const formData = searchForm.getFieldsValue()
       const userId = formData.userId ?? ""
       const userNm = formData.userNm ?? ""
-      $jsonUtil.fetchJson("user").then((data) => {
+      $jsonUtil.fetchJson("user").then(({ data }) => {
         let query = `SELECT * FROM ? WHERE 1=1`
         const parmas = [data]
         if (userId) {
