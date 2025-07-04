@@ -5,5 +5,16 @@
     "_seq": "number",
     "userId": "string"
   },
-  "data": []
+  "data": [
+    {
+      "crprCd": "100",
+      "menuId": "CM00",
+      "userId": "user2"
+    },
+    {
+      "crprCd": "100",
+      "menuId": "CM01",
+      "userId": "0004"
+    }
+  ]
 }

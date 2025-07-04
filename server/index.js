@@ -21,6 +21,9 @@ app.use(express.static(path.join(__dirname, "..", "public")))
 app.post("/api/save-json", (req, res) => {
   const { fileName, data } = req.body
 
+  console.log('Received save request for:', fileName);
+  console.log('Data:', JSON.stringify(data, null, 2));
+
   if (!fileName) {
     return res
       .status(400)
@@ -29,6 +32,8 @@ app.post("/api/save-json", (req, res) => {
 
   const dirPath = path.join(__dirname, "..", "public", "mock")
   const filePath = path.join(dirPath, `${fileName}.json`)
+
+  console.log('Attempting to write to:', filePath);
 
   // 디렉토리 없으면 생성
   if (!fs.existsSync(dirPath)) {

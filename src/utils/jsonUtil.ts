@@ -43,15 +43,6 @@ const updateJson = async (jsonName: string, gridRef: AntdTableRef) => {
 
     //rowStatus가 update인 경우
     if (rowStatus === "update") {
-      // 컬럼의 requried가 true인 경우는 where절에 사용
-      // 컬럼의 requried가 false인 경우는 set절에 사용
-      const setquery =
-        columnList?.filter((item) => item.required !== true) || []
-      const setClauses = setquery
-        .map((key) => `${key.dataIndex} = ?`)
-        .join(", ")
-      const setValues = setquery.map((key) => record[key?.dataIndex])
-
       const keyColumns =
         columnList?.filter((item) => item.required === true) || []
       const whereClauses = keyColumns
@@ -59,9 +50,46 @@ const updateJson = async (jsonName: string, gridRef: AntdTableRef) => {
         .join(" AND ")
       const whereValues = keyColumns.map((key) => record[key?.dataIndex])
 
-      const query = `UPDATE ${jsonName} SET ${setClauses} WHERE ${whereClauses}`
+      const validQuery = `SELECT * FROM ${jsonName} WHERE ${whereClauses}`
+      const validResult = alasql(validQuery, [...whereValues])
 
-      resultCnt += alasql(query, [...setValues, ...whereValues]) as number
+      if (validResult.length > 0) {
+        // 레코드가 존재하면 UPDATE
+        const setquery =
+          columnList?.filter((item) => item.required !== true) || []
+        const setClauses = setquery
+          .map((key) => `${key.dataIndex} = ?`)
+          .join(", ")
+        const setValues = setquery.map((key) => record[key?.dataIndex])
+
+        const query = `UPDATE ${jsonName} SET ${setClauses} WHERE ${whereClauses}`
+        resultCnt += alasql(query, [...setValues, ...whereValues]) as number
+      } else {
+        // 레코드가 존재하지 않으면 INSERT
+        const requiredValid = whereValues.filter((item) => item === undefined)
+
+        if (requiredValid.length > 0) {
+          alert(`${data.indexOf(rawData)}행의 필수값이 없습니다.`)
+          return
+        }
+
+        const columns = columnList.map((item) => item.dataIndex).join(", ")
+        const values = columnList
+          .map((item) => {
+            if (item.dataIndex === "_seq") {
+              const _seqsql = `(SELECT MAX(COALESCE(_seq,0)+1) FROM ${jsonName} WHERE ${whereClauses})`
+              return alasql(_seqsql, [...whereValues]) as number
+            }
+
+            return `'${record[item?.dataIndex] ?? ""}'`
+          })
+          .join(", ")
+
+        const query = `INSERT INTO ${jsonName} (${columns}) VALUES (${values})`
+
+        console.log("query", query)
+        resultCnt += alasql(query) as number
+      }
     } else if (rowStatus === "insert") {
       //TODO: INSERT
 
@@ -121,7 +149,6 @@ const updateJson = async (jsonName: string, gridRef: AntdTableRef) => {
     }
   })
   const result = alasql(`SELECT * FROM ${jsonName}`)
-  console.log("result", result)
   const saveToServer = async (data: any) => {
     const res = await fetch("/api/save-json", {
       method: "POST",

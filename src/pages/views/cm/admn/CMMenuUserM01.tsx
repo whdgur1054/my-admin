@@ -4,21 +4,69 @@ import AntdTable, {
   EditableCellProps,
   RowStatus,
 } from "../../../../components/AntdTable"
-import { Button, Col, Flex, Form, Input, Modal, Row } from "antd"
+import { Button, Col, Flex, Form, Input, Modal, Row, Spin } from "antd"
 import { $jsonUtil } from "../../../../utils/jsonUtil"
 import alasql from "alasql"
 import { SearchOutlined } from "@ant-design/icons"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+
+// API 호출 함수들을 분리하여 정의 (재사용성 및 가독성 향상)
+const fetchUsers = () => $jsonUtil.fetchJson("user").then((res) => res.data)
+const fetchMenuUsers = () =>
+  $jsonUtil.fetchJson("menuuser").then((res) => res.data)
+const fetchMenus = () => $jsonUtil.fetchJson("menu").then((res) => res.data)
 
 const CMMenuUserM01 = () => {
   const tableRef = useRef<AntdTableRef>(null)
   const searchFormRef = useRef<any>(null)
   const [tableData, setTableData] = useState<any[]>([])
-
   const [modalOpen, setModalOpen] = useState(false)
+  const queryClient = useQueryClient()
 
+  // 1. useQuery를 사용하여 각 데이터를 독립적으로, 병렬로 불러옵니다.
+  const { data: userData, isLoading: isUserLoading } = useQuery({
+    queryKey: ["users"],
+    queryFn: fetchUsers,
+  })
+  const { data: menuUserData, isLoading: isMenuUserLoading } = useQuery({
+    queryKey: ["menuUsers"],
+    queryFn: fetchMenuUsers,
+  })
+  const { data: menuData, isLoading: isMenuLoading } = useQuery({
+    queryKey: ["menus"],
+    queryFn: fetchMenus,
+  })
+
+  // 전체 로딩 상태를 통합 관리
+  const isLoading = isUserLoading || isMenuUserLoading || isMenuLoading
+
+  // 2. useMutation을 사용하여 저장 로직을 처리합니다.
+  const saveMutation = useMutation({
+    mutationFn: (ref: AntdTableRef) => {
+      console.log(ref)
+      return $jsonUtil.updateJson("menuuser", ref).then((res) => {
+        console.log(res)
+        buttonEvent.buttonSrch()
+        return res
+      })
+    },
+    onSuccess: () => {
+      // 저장이 성공하면, 관련 쿼리를 무효화하여 자동으로 데이터를 다시 불러옵니다.
+      alert("저장되었습니다.")
+      queryClient.invalidateQueries({ queryKey: ["menuUsers"] })
+    },
+    onError: (error) => {
+      alert(`저장 중 오류가 발생했습니다: ${error.message}`)
+    },
+  })
+
+  // 3. 데이터 로딩이 완료되면, useEffect를 통해 alasql로 데이터를 조합합니다.
   useEffect(() => {
-    buttonEvent.buttonSrch()
-  }, [])
+    // 데이터가 모두 로딩되었을 때만 실행
+    if (userData && menuUserData && menuData) {
+      buttonEvent.buttonSrch()
+    }
+  }, [userData, menuUserData, menuData]) // 데이터가 변경될 때마다 실행
 
   interface UserMstr {
     crprCd: number
@@ -67,25 +115,15 @@ const CMMenuUserM01 = () => {
             <Button
               shape="circle"
               icon={<SearchOutlined />}
-              onClick={() => {
-                setModalOpen(true)
-                console.log("click")
-              }}
+              onClick={() => setModalOpen(true)}
             ></Button>
           ) : (
             <></>
           )}
           <Modal
             open={modalOpen}
-            onCancel={(e) => {
-              setModalOpen(false)
-            }}
-            onClose={(e) => {
-              setModalOpen(false)
-            }}
-            onOk={(e) => {
-              setModalOpen(false)
-            }}
+            onCancel={() => setModalOpen(false)}
+            onOk={() => setModalOpen(false)}
             title="테스트"
           >
             <Form>
@@ -123,105 +161,89 @@ const CMMenuUserM01 = () => {
   ]
 
   const buttonEvent = {
-    async buttonSrch() {
-      const searchForm = searchFormRef.current
-      const formData = searchForm.getFieldsValue()
-      const userId = formData.userId ?? ""
-      const userNm = formData.userNm ?? ""
-      let menuData = []
-      let menuUserData = []
-      let userData = []
+    buttonSrch() {
+      // 검색은 클라이언트 사이드에서 처리되므로, 쿼리를 다시 실행할 필요 없이
+      // useEffect를 다시 트리거하기 위해 데이터들을 재조합합니다.
+      if (userData && menuUserData && menuData) {
+        const searchForm = searchFormRef.current
+        const formData = searchForm.getFieldsValue()
+        const userId = formData.userId ?? ""
+        const userNm = formData.userNm ?? ""
 
-      async function fetchData() {
-        let userData: any[] = []
-        let menuUserData: any[] = []
-        let menuData: any[] = []
-        await $jsonUtil.fetchJson("user").then(({ data }) => {
-          userData = data
-        })
+        let query = `SELECT T1.*, T2.userId, T3.userNm, T3.userGbCd, T3.userNo FROM ? AS T1
+                     LEFT JOIN ? AS T2 ON T1.menuId = T2.menuId
+                     LEFT JOIN ? AS T3 ON T2.userId = T3.userId
+                     WHERE 1=1`
+        const params: any[] = [menuData, menuUserData, userData]
 
-        await $jsonUtil.fetchJson("menuuser").then(({ data }) => {
-          menuUserData = data
-        })
-
-        await $jsonUtil.fetchJson("menu").then(({ data }) => {
-          menuData = data
-        })
-        return { userData, menuUserData, menuData }
+        if (userId) {
+          query += ` AND T3.userId LIKE ?`
+          params.push(`%${userId}%`)
+        }
+        if (userNm) {
+          query += ` AND T3.userNm LIKE ?`
+          params.push(`%${userNm}%`)
+        }
+        const resultData = alasql(query, params) as any[]
+        setTableData(resultData)
       }
-      fetchData().then((result) => {
-        //   let query = `SELECT * FROM ? AS A LEFT JOIN ? AS B ON A.menuId = B.menuId LEFT JOIN ? C ON B.userId = C.userid WHERE 1=1`
-        let query = `SELECT * FROM ? AS A `
-
-        console.log("menuData", result.menuData)
-        console.log("menuUserData", result.menuUserData)
-        console.log("userData", result.userData)
-        //   const parmas = [menuData, menuUserData, userData]
-        const parmas = [result.menuData]
-
-        //   if (userId) {
-        //     query += ` AND C.userId LIKE ?`
-        //     parmas.push(`%${userId}%`)
-        //   }
-        //   if (userNm) {
-        //     query += ` AND C.userNm LIKE ?`
-        //     parmas.push(`%${userNm}%`)
-        //   }
-        const tableData = alasql(query, parmas) as any[]
-        setTableData(tableData)
-      })
     },
     buttonAdd() {
-      console.log(tableRef.current?.getCurrentRow())
       tableRef.current?.addRow({})
     },
     buttonSave() {
       if (tableRef.current) {
-        $jsonUtil.updateJson("menuuser", tableRef.current).then(() => {
-          buttonEvent.buttonSrch()
-        })
+        saveMutation.mutate(tableRef.current)
       }
     },
     buttonDel() {
       tableRef.current?.deleteRows()
     },
   }
+
   return (
-    <div>
-      <Flex
-        justify="space-between"
-        align="center"
-        style={{ marginBottom: "20px" }}
-      >
-        <Form ref={searchFormRef}>
-          <Row>
-            <Col span={11}>
-              <Form.Item label="사용자ID" name="userId">
-                <Input></Input>
-              </Form.Item>
-            </Col>
-            <Col span={1}></Col>
-            <Col span={11}>
-              <Form.Item label="사용자명" name="userNm">
-                <Input></Input>
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form>
-        <Flex>
-          <Button onClick={buttonEvent.buttonSrch}> 조회</Button>
-          <Button onClick={buttonEvent.buttonAdd}> 추가</Button>
-          <Button onClick={buttonEvent.buttonDel}> 삭제</Button>
-          <Button onClick={buttonEvent.buttonSave}> 저장</Button>
+    <Spin spinning={isLoading || saveMutation.isPending} tip="처리 중...">
+      <div>
+        <Flex
+          justify="space-between"
+          align="center"
+          style={{ marginBottom: "20px" }}
+        >
+          <Form ref={searchFormRef}>
+            <Row>
+              <Col span={11}>
+                <Form.Item label="사용자ID" name="userId">
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col span={1}></Col>
+              <Col span={11}>
+                <Form.Item label="사용자명" name="userNm">
+                  <Input />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form>
+          <Flex>
+            <Button onClick={buttonEvent.buttonSrch}> 조회</Button>
+            <Button onClick={buttonEvent.buttonAdd}> 추가</Button>
+            <Button onClick={buttonEvent.buttonDel}> 삭제</Button>
+            <Button
+              onClick={buttonEvent.buttonSave}
+              loading={saveMutation.isPending}
+            >
+              저장
+            </Button>
+          </Flex>
         </Flex>
-      </Flex>
-      <AntdTable
-        columns={columns}
-        data={tableData}
-        ref={tableRef}
-        options={{ check: true }}
-      />
-    </div>
+        <AntdTable
+          columns={columns}
+          data={tableData}
+          ref={tableRef}
+          options={{ check: true }}
+        />
+      </div>
+    </Spin>
   )
 }
 
